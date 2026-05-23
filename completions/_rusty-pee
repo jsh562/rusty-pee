@@ -1,0 +1,107 @@
+#compdef rusty-pee
+
+autoload -U is-at-least
+
+_rusty-pee() {
+    typeset -A opt_args
+    typeset -a _arguments_options
+    local ret=1
+
+    if is-at-least 5.2; then
+        _arguments_options=(-s -S -C)
+    else
+        _arguments_options=(-s -C)
+    fi
+
+    local context curcontext="$curcontext" state line
+    _arguments "${_arguments_options[@]}" : \
+'--capture[Buffer each child'\''s stdout and emit in argv order after all children exit (Default mode only). Without this flag, children inherit the parent'\''s stdout and their outputs interleave nondeterministically]' \
+'(--no-strict)--strict[Enable strict moreutils-compat mode]' \
+'--no-strict[Explicitly disable strict mode (overrides env + argv\[0\])]' \
+'-h[Print help (see more with '\''--help'\'')]' \
+'--help[Print help (see more with '\''--help'\'')]' \
+'-V[Print version]' \
+'--version[Print version]' \
+'::commands -- Positional command strings — each spawned via the platform shell:_default' \
+":: :_rusty-pee_commands" \
+"*::: :->rusty-pee" \
+&& ret=0
+    case $state in
+    (rusty-pee)
+        words=($line[2] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:rusty-pee-command-$line[2]:"
+        case $line[2] in
+            (completions)
+_arguments "${_arguments_options[@]}" : \
+'-h[Print help]' \
+'--help[Print help]' \
+':shell:(bash elvish fish powershell zsh)' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+":: :_rusty-pee__subcmd__help_commands" \
+"*::: :->help" \
+&& ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:rusty-pee-help-command-$line[1]:"
+        case $line[1] in
+            (completions)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+        esac
+    ;;
+esac
+}
+
+(( $+functions[_rusty-pee_commands] )) ||
+_rusty-pee_commands() {
+    local commands; commands=(
+'completions:Emit shell completion scripts (Default mode only)' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'rusty-pee commands' commands "$@"
+}
+(( $+functions[_rusty-pee__subcmd__completions_commands] )) ||
+_rusty-pee__subcmd__completions_commands() {
+    local commands; commands=()
+    _describe -t commands 'rusty-pee completions commands' commands "$@"
+}
+(( $+functions[_rusty-pee__subcmd__help_commands] )) ||
+_rusty-pee__subcmd__help_commands() {
+    local commands; commands=(
+'completions:Emit shell completion scripts (Default mode only)' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'rusty-pee help commands' commands "$@"
+}
+(( $+functions[_rusty-pee__subcmd__help__subcmd__completions_commands] )) ||
+_rusty-pee__subcmd__help__subcmd__completions_commands() {
+    local commands; commands=()
+    _describe -t commands 'rusty-pee help completions commands' commands "$@"
+}
+(( $+functions[_rusty-pee__subcmd__help__subcmd__help_commands] )) ||
+_rusty-pee__subcmd__help__subcmd__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'rusty-pee help help commands' commands "$@"
+}
+
+if [ "$funcstack[1]" = "_rusty-pee" ]; then
+    _rusty-pee "$@"
+else
+    compdef _rusty-pee rusty-pee
+fi
