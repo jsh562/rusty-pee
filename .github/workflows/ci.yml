@@ -166,13 +166,12 @@ jobs:
           # requiring real shell utilities like grep/wc/sort.
           cargo build --release --features dev-helpers --bin fake-pee-child
           fake_child="$PWD/target/release/fake-pee-child"
-          # Fan-out smoke: feed `alpha\nbravo\ncharlie\n` through rusty-pee
-          # to two passthrough echo children; assert each child's stdout
-          # would contain the input bytes. Use `count` mode so the children
-          # emit a deterministic byte count summary on stdout.
-          out=$(printf 'alpha\nbravo\ncharlie\n' | rusty-pee --capture "$fake_child count" "$fake_child count" 2>&1 || true)
-          if ! echo "$out" | grep -q "21"; then
-            echo "::error::SC-002 smoke failed — expected fan-out byte count '21' in output, got: $out"
+          # Fan-out smoke: feed `hello\n` through rusty-pee to two echo
+          # children under --capture, which re-emits each child's stdout in
+          # argv order. Both children must reproduce the input stream.
+          out=$(printf 'hello\n' | rusty-pee --capture "$fake_child --transform=echo" "$fake_child --transform=echo")
+          if [ "$(printf '%s' "$out" | grep -c 'hello')" != "2" ]; then
+            echo "::error::SC-002 smoke failed — expected fan-out to reproduce input twice, got: $out"
             exit 1
           fi
           echo "SC-002 default-install smoke: PASS"
